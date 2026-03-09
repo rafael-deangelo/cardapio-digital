@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cardápio Digital</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <h1>Cardápio Digital</h1>
+      <p>Peça sem sair de casa: escolha seus produtos e envie no WhatsApp.</p>
+    </header>
+
+    <main class="container">
+      <section>
+        <h2>Produtos</h2>
+        <div id="product-list" class="product-grid"></div>
+      </section>
+
+      <aside class="cart">
+        <h2>Seu pedido</h2>
+        <ul id="cart-items"></ul>
+        <p class="cart-total">Total: <strong id="cart-total">R$ 0,00</strong></p>
+
+        <label for="customer-name">Seu nome</label>
+        <input id="customer-name" type="text" placeholder="Ex.: Maria" />
+
+        <label for="customer-address">Endereço de entrega</label>
+        <textarea
+          id="customer-address"
+          placeholder="Rua, número, bairro e referência"
+        ></textarea>
+
+        <button id="checkout-button">Enviar pedido por WhatsApp</button>
+      </aside>
+    </main>
+
+    <footer>
+      <small>Configure seus produtos e compartilhe o link desta página com seus clientes.</small>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
