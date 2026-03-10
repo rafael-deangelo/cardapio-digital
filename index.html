@@ -10,11 +10,13 @@
     <header class="hero">
       <h1>Cardápio Digital</h1>
       <p>Peça sem sair de casa: escolha seus produtos e envie no WhatsApp.</p>
+      <a class="admin-link" href="admin.html">Acesso administrador</a>
     </header>
 
     <main class="container">
       <section>
         <h2>Produtos</h2>
+        <p id="catalog-source" class="muted-text"></p>
         <div id="product-list" class="product-grid"></div>
       </section>
 
@@ -23,21 +25,55 @@
         <ul id="cart-items"></ul>
         <p class="cart-total">Total: <strong id="cart-total">R$ 0,00</strong></p>
 
+        <div class="cart-actions">
+          <button id="clear-cart-button" class="secondary-button" type="button">Limpar pedido</button>
+        </div>
+
         <label for="customer-name">Seu nome</label>
         <input id="customer-name" type="text" placeholder="Ex.: Maria" />
 
-        <label for="customer-address">Endereço de entrega</label>
-        <textarea
-          id="customer-address"
-          placeholder="Rua, número, bairro e referência"
-        ></textarea>
+        <label for="payment-method">Forma de pagamento</label>
+        <select id="payment-method">
+          <option value="">Selecione</option>
+          <option value="Pix">Pix</option>
+          <option value="Dinheiro">Dinheiro</option>
+          <option value="Cartão de Débito">Cartão de Débito</option>
+          <option value="Cartão de Crédito">Cartão de Crédito</option>
+        </select>
 
-        <button id="checkout-button">Enviar pedido por WhatsApp</button>
+        <h3>Endereço de entrega</h3>
+        <label for="customer-cep">CEP</label>
+        <input id="customer-cep" type="text" placeholder="00000-000" maxlength="9" />
+
+        <div class="address-grid">
+          <div>
+            <label for="customer-street">Rua</label>
+            <input id="customer-street" type="text" />
+          </div>
+          <div>
+            <label for="customer-number">Número</label>
+            <input id="customer-number" type="text" />
+          </div>
+          <div>
+            <label for="customer-neighborhood">Bairro</label>
+            <input id="customer-neighborhood" type="text" />
+          </div>
+          <div>
+            <label for="customer-city">Cidade</label>
+            <input id="customer-city" type="text" />
+          </div>
+          <div>
+            <label for="customer-state">Estado</label>
+            <input id="customer-state" type="text" maxlength="2" />
+          </div>
+        </div>
+
+        <button id="checkout-button" type="button">Enviar pedido por WhatsApp</button>
       </aside>
     </main>
 
     <footer>
-      <small>Configure seus produtos e compartilhe o link desta página com seus clientes.</small>
+      <small>Compartilhe este link com seus clientes para receber pedidos no WhatsApp.</small>
     </footer>
 
     <script src="app.js"></script>
