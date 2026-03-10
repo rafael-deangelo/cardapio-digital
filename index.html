@@ -23,18 +23,81 @@
         <ul id="cart-items"></ul>
         <p class="cart-total">Total: <strong id="cart-total">R$ 0,00</strong></p>
 
+        <div class="cart-actions">
+          <button id="clear-cart-button" class="secondary-button" type="button">Limpar pedido</button>
+        </div>
+
         <label for="customer-name">Seu nome</label>
         <input id="customer-name" type="text" placeholder="Ex.: Maria" />
 
-        <label for="customer-address">Endereço de entrega</label>
-        <textarea
-          id="customer-address"
-          placeholder="Rua, número, bairro e referência"
-        ></textarea>
+        <label for="payment-method">Forma de pagamento</label>
+        <select id="payment-method">
+          <option value="">Selecione</option>
+          <option value="Pix">Pix</option>
+          <option value="Dinheiro">Dinheiro</option>
+          <option value="Cartão de Débito">Cartão de Débito</option>
+          <option value="Cartão de Crédito">Cartão de Crédito</option>
+        </select>
 
-        <button id="checkout-button">Enviar pedido por WhatsApp</button>
+        <h3>Endereço de entrega</h3>
+        <label for="customer-cep">CEP</label>
+        <input id="customer-cep" type="text" placeholder="00000-000" maxlength="9" />
+
+        <div class="address-grid">
+          <div>
+            <label for="customer-street">Rua</label>
+            <input id="customer-street" type="text" />
+          </div>
+          <div>
+            <label for="customer-number">Número</label>
+            <input id="customer-number" type="text" />
+          </div>
+          <div>
+            <label for="customer-neighborhood">Bairro</label>
+            <input id="customer-neighborhood" type="text" />
+          </div>
+          <div>
+            <label for="customer-city">Cidade</label>
+            <input id="customer-city" type="text" />
+          </div>
+          <div>
+            <label for="customer-state">Estado</label>
+            <input id="customer-state" type="text" maxlength="2" />
+          </div>
+        </div>
+
+        <button id="checkout-button" type="button">Enviar pedido por WhatsApp</button>
       </aside>
     </main>
+
+    <section class="admin-section">
+      <h2>Área do administrador</h2>
+      <p>Cadastre produtos, preço, imagem e controle se estão ativos no cardápio.</p>
+
+      <form id="admin-product-form" class="admin-form">
+        <input id="admin-product-id" type="hidden" />
+
+        <label for="admin-product-name">Nome do produto</label>
+        <input id="admin-product-name" type="text" placeholder="Ex.: X-Salada" required />
+
+        <label for="admin-product-price">Preço</label>
+        <input id="admin-product-price" type="number" min="0" step="0.01" placeholder="0,00" required />
+
+        <label for="admin-product-image">URL da imagem</label>
+        <input id="admin-product-image" type="url" placeholder="https://..." />
+
+        <label class="inline-checkbox" for="admin-product-active">
+          <input id="admin-product-active" type="checkbox" checked /> Produto ativo
+        </label>
+
+        <div class="admin-actions">
+          <button type="submit">Salvar produto</button>
+          <button id="admin-cancel-edit" class="secondary-button" type="button">Cancelar edição</button>
+        </div>
+      </form>
+
+      <ul id="admin-products-list" class="admin-products-list"></ul>
+    </section>
 
     <footer>
       <small>Configure seus produtos e compartilhe o link desta página com seus clientes.</small>

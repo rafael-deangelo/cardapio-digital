@@ -39,11 +39,27 @@ body {
 }
 
 .product-card,
-.cart {
+.cart,
+.admin-section {
   background: var(--card);
   border-radius: 10px;
   padding: 16px;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.product-image {
+  width: 100%;
+  height: 130px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.product-image-placeholder {
+  display: grid;
+  place-items: center;
+  color: #5b6b74;
+  background: #eaf1f4;
 }
 
 .product-card h3 {
@@ -58,25 +74,39 @@ button {
   border: none;
   border-radius: 8px;
   cursor: pointer;
-}
-
-.product-card button {
-  background: var(--primary);
-  color: #fff;
-  width: 100%;
   padding: 10px;
 }
 
-.cart ul {
+.product-card button,
+.admin-actions button:last-child,
+.admin-item-actions button:last-child {
+  background: var(--primary);
+  color: #fff;
+}
+
+.cart ul,
+.admin-products-list {
   list-style: none;
   padding: 0;
   min-height: 72px;
 }
 
-.cart li {
+.cart-item {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   margin-bottom: 8px;
+  gap: 10px;
+}
+
+.cart-item div {
+  display: grid;
+}
+
+.remove-item-button,
+.secondary-button {
+  background: #e6edf1;
+  color: #304553;
 }
 
 .cart-total {
@@ -84,12 +114,23 @@ button {
 }
 
 input,
-textarea {
+textarea,
+select {
   width: 100%;
   margin: 6px 0 12px;
   padding: 10px;
   border: 1px solid #ccd7dd;
   border-radius: 8px;
+}
+
+.address-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.cart-actions {
+  margin-bottom: 10px;
 }
 
 #checkout-button {
@@ -98,6 +139,48 @@ textarea {
   background: #128c7e;
   color: #fff;
   font-weight: bold;
+}
+
+.admin-section {
+  max-width: 1200px;
+  margin: 0 auto 24px;
+}
+
+.admin-form {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.inline-checkbox {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.inline-checkbox input {
+  width: auto;
+  margin: 0;
+}
+
+.admin-actions,
+.admin-item-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-product-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #e5ecef;
+  padding: 8px 0;
+}
+
+.admin-product-item small {
+  display: block;
+  color: #5b6b74;
+  margin-top: 4px;
 }
 
 footer {
@@ -109,5 +192,14 @@ footer {
 @media (max-width: 900px) {
   .container {
     grid-template-columns: 1fr;
+  }
+
+  .address-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-product-item {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
