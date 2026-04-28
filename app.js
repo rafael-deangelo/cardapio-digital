@@ -1,361 +1,386 @@
-const WHATSAPP_NUMBER = "5511999999999"; // Troque pelo número da loja com DDI e DDD
-const STORAGE_KEY = "cardapio_digital_products";
+const STORAGE_KEY = "volunteer_scheduler_data_v1";
 
-const defaultProducts = [
-  { id: 1, name: "X-Burger Artesanal", price: 24.9, image: "", active: true },
-  { id: 2, name: "Batata Frita Grande", price: 16.0, image: "", active: true },
-  { id: 3, name: "Refrigerante 2L", price: 12.0, image: "", active: true },
-  { id: 4, name: "Açaí 500ml", price: 18.5, image: "", active: true },
-  { id: 5, name: "Pizza Broto Calabresa", price: 29.9, image: "", active: true },
-  { id: 6, name: "Suco Natural", price: 9.0, image: "", active: true },
-];
+const defaultData = {
+  churchName: "Primeira Igreja Batista de Curitiba",
+  campusName: "PIB Curitiba - Campos Piraquara",
+  ministryName: "Ministério de Produção de Culto",
+  roles: ["Manager", "Apoio de palco"],
+  volunteers: [],
+  availabilities: {},
+};
 
-let products = loadProducts();
-const cart = [];
+let state = loadState();
 
-const productListEl = document.getElementById("product-list");
-const cartItemsEl = document.getElementById("cart-items");
-const cartTotalEl = document.getElementById("cart-total");
-const checkoutButton = document.getElementById("checkout-button");
-const clearCartButton = document.getElementById("clear-cart-button");
-const paymentMethodEl = document.getElementById("payment-method");
+const ministryForm = document.getElementById("ministry-form");
+const churchNameEl = document.getElementById("church-name");
+const campusNameEl = document.getElementById("campus-name");
+const ministryNameEl = document.getElementById("ministry-name");
+const rolesInputEl = document.getElementById("roles-input");
+const activeMinistryNameEl = document.getElementById("active-ministry-name");
 
-const cepEl = document.getElementById("customer-cep");
-const streetEl = document.getElementById("customer-street");
-const numberEl = document.getElementById("customer-number");
-const neighborhoodEl = document.getElementById("customer-neighborhood");
-const cityEl = document.getElementById("customer-city");
-const stateEl = document.getElementById("customer-state");
+const volunteerForm = document.getElementById("volunteer-form");
+const volunteerNameEl = document.getElementById("volunteer-name");
+const volunteerPhoneEl = document.getElementById("volunteer-phone");
+const volunteerEmailEl = document.getElementById("volunteer-email");
+const rolesCheckboxesEl = document.getElementById("roles-checkboxes");
+const volunteersListEl = document.getElementById("volunteers-list");
 
-const adminForm = document.getElementById("admin-product-form");
-const adminProductIdEl = document.getElementById("admin-product-id");
-const adminProductNameEl = document.getElementById("admin-product-name");
-const adminProductPriceEl = document.getElementById("admin-product-price");
-const adminProductImageEl = document.getElementById("admin-product-image");
-const adminProductActiveEl = document.getElementById("admin-product-active");
-const adminProductsListEl = document.getElementById("admin-products-list");
-const adminCancelEditButton = document.getElementById("admin-cancel-edit");
+const monthPickerEl = document.getElementById("month-picker");
+const sendRequestButton = document.getElementById("send-request-button");
+const requestMessageEl = document.getElementById("request-message");
+const availabilityCalendarEl = document.getElementById("availability-calendar");
 
-function currency(value) {
-  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
+const generateScheduleButton = document.getElementById("generate-schedule-button");
+const fallbackNameEl = document.getElementById("fallback-name");
+const scheduleOutputEl = document.getElementById("schedule-output");
 
-function loadProducts() {
+initialize();
+
+function loadState() {
   const saved = localStorage.getItem(STORAGE_KEY);
-  if (!saved) return [...defaultProducts];
+  if (!saved) return structuredClone(defaultData);
 
   try {
     const parsed = JSON.parse(saved);
-    if (!Array.isArray(parsed)) return [...defaultProducts];
-
-    return parsed.map((product) => ({
-      id: Number(product.id),
-      name: String(product.name),
-      price: Number(product.price),
-      image: product.image ? String(product.image) : "",
-      active: product.active !== false,
-    }));
+    return {
+      churchName: String(parsed.churchName || defaultData.churchName),
+      campusName: String(parsed.campusName || defaultData.campusName),
+      ministryName: String(parsed.ministryName || defaultData.ministryName),
+      roles: Array.isArray(parsed.roles) && parsed.roles.length
+        ? parsed.roles.map((role) => String(role))
+        : [...defaultData.roles],
+      volunteers: Array.isArray(parsed.volunteers)
+        ? parsed.volunteers.map((v) => ({
+            id: Number(v.id),
+            name: String(v.name),
+            phone: String(v.phone),
+            email: String(v.email),
+            roles: Array.isArray(v.roles) ? v.roles.map((r) => String(r)) : [],
+          }))
+        : [],
+      availabilities: typeof parsed.availabilities === "object" && parsed.availabilities
+        ? parsed.availabilities
+        : {},
+    };
   } catch {
-    return [...defaultProducts];
+    return structuredClone(defaultData);
   }
 }
 
-function saveProducts() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-function getProductById(productId) {
-  return products.find((product) => product.id === productId);
+function initialize() {
+  monthPickerEl.value = getCurrentMonthValue();
+  fillMinistryForm();
+  renderRolesCheckboxes();
+  renderVolunteers();
+  renderAvailabilityCalendar();
+  updateRequestMessage();
+
+  ministryForm.addEventListener("submit", handleMinistrySave);
+  volunteerForm.addEventListener("submit", handleVolunteerSubmit);
+  monthPickerEl.addEventListener("change", () => {
+    renderAvailabilityCalendar();
+    updateRequestMessage();
+  });
+  sendRequestButton.addEventListener("click", copyRequestMessage);
+  generateScheduleButton.addEventListener("click", renderAutoSchedule);
 }
 
-function renderProducts() {
-  productListEl.innerHTML = "";
-  const activeProducts = products.filter((product) => product.active);
+function getCurrentMonthValue() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
 
-  if (!activeProducts.length) {
-    productListEl.innerHTML = "<p>Nenhum produto ativo no momento.</p>";
+function fillMinistryForm() {
+  churchNameEl.value = state.churchName;
+  campusNameEl.value = state.campusName;
+  ministryNameEl.value = state.ministryName;
+  rolesInputEl.value = state.roles.join(", ");
+  activeMinistryNameEl.textContent = state.ministryName;
+}
+
+function handleMinistrySave(event) {
+  event.preventDefault();
+
+  const roles = rolesInputEl.value
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  if (!roles.length) {
+    alert("Informe pelo menos uma função para o ministério.");
     return;
   }
 
-  activeProducts.forEach((product) => {
-    const card = document.createElement("article");
-    card.className = "product-card";
+  state.churchName = churchNameEl.value.trim();
+  state.campusName = campusNameEl.value.trim();
+  state.ministryName = ministryNameEl.value.trim();
+  state.roles = roles;
 
-    const imageHtml = product.image
-      ? `<img src="${product.image}" alt="${product.name}" class="product-image" />`
-      : '<div class="product-image product-image-placeholder">Sem imagem</div>';
+  state.volunteers = state.volunteers.map((volunteer) => ({
+    ...volunteer,
+    roles: volunteer.roles.filter((role) => roles.includes(role)),
+  }));
 
-    card.innerHTML = `
-      ${imageHtml}
-      <h3>${product.name}</h3>
-      <p><strong>${currency(product.price)}</strong></p>
-      <button data-id="${product.id}" type="button">Adicionar ao pedido</button>
+  saveState();
+  fillMinistryForm();
+  renderRolesCheckboxes();
+  renderVolunteers();
+  renderAvailabilityCalendar();
+  updateRequestMessage();
+
+  alert("Configuração do ministério salva com sucesso.");
+}
+
+function renderRolesCheckboxes() {
+  rolesCheckboxesEl.innerHTML = "";
+
+  state.roles.forEach((role, index) => {
+    const label = document.createElement("label");
+    label.className = "checkbox-item";
+
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.name = "volunteer-role";
+    input.value = role;
+    input.checked = index === 0;
+
+    label.append(input, document.createTextNode(role));
+    rolesCheckboxesEl.appendChild(label);
+  });
+}
+
+function handleVolunteerSubmit(event) {
+  event.preventDefault();
+
+  const selectedRoles = Array.from(document.querySelectorAll('input[name="volunteer-role"]:checked'))
+    .map((input) => input.value);
+
+  if (!selectedRoles.length) {
+    alert("Selecione ao menos uma função.");
+    return;
+  }
+
+  const volunteer = {
+    id: Date.now(),
+    name: volunteerNameEl.value.trim(),
+    phone: volunteerPhoneEl.value.trim(),
+    email: volunteerEmailEl.value.trim(),
+    roles: selectedRoles,
+  };
+
+  state.volunteers.push(volunteer);
+  saveState();
+  volunteerForm.reset();
+  renderRolesCheckboxes();
+  renderVolunteers();
+  renderAvailabilityCalendar();
+  updateRequestMessage();
+}
+
+function renderVolunteers() {
+  volunteersListEl.innerHTML = "";
+
+  if (!state.volunteers.length) {
+    volunteersListEl.innerHTML = '<li class="empty">Nenhum voluntário cadastrado ainda.</li>';
+    return;
+  }
+
+  state.volunteers.forEach((volunteer) => {
+    const li = document.createElement("li");
+    li.className = "volunteer-item";
+    li.innerHTML = `
+      <div>
+        <strong>${volunteer.name}</strong>
+        <small>${volunteer.email} • ${volunteer.phone}</small>
+        <small>Funções: ${volunteer.roles.join(", ")}</small>
+      </div>
+      <button type="button" data-id="${volunteer.id}" class="danger">Remover</button>
     `;
 
-    card.querySelector("button").addEventListener("click", () => addToCart(product.id));
-    productListEl.appendChild(card);
+    li.querySelector("button").addEventListener("click", () => removeVolunteer(volunteer.id));
+    volunteersListEl.appendChild(li);
   });
 }
 
-function addToCart(productId) {
-  const product = getProductById(productId);
-  if (!product || !product.active) return;
+function removeVolunteer(volunteerId) {
+  state.volunteers = state.volunteers.filter((volunteer) => volunteer.id !== volunteerId);
+  Object.keys(state.availabilities).forEach((dateKey) => {
+    if (state.availabilities[dateKey]) {
+      delete state.availabilities[dateKey][volunteerId];
+    }
+  });
+  saveState();
+  renderVolunteers();
+  renderAvailabilityCalendar();
+}
 
-  const item = cart.find((entry) => entry.productId === productId);
-  if (item) {
-    item.quantity += 1;
-  } else {
-    cart.push({ productId, quantity: 1 });
+function buildMonthDates(monthValue) {
+  const [yearStr, monthStr] = monthValue.split("-");
+  const year = Number(yearStr);
+  const month = Number(monthStr) - 1;
+  const date = new Date(year, month, 1);
+  const dates = [];
+
+  while (date.getMonth() === month) {
+    dates.push(new Date(date));
+    date.setDate(date.getDate() + 1);
   }
-  renderCart();
+
+  return dates;
 }
 
-function removeItemFromCart(productId) {
-  const index = cart.findIndex((item) => item.productId === productId);
-  if (index === -1) return;
-
-  cart.splice(index, 1);
-  renderCart();
+function getServiceTypeByDay(date) {
+  const day = date.getDay();
+  if (day === 6) return "Sábado 19:00";
+  if (day === 0) return ["Domingo 09:00", "Domingo 19:00"];
+  return null;
 }
 
-function clearCart() {
-  cart.length = 0;
-  renderCart();
-}
+function renderAvailabilityCalendar() {
+  availabilityCalendarEl.innerHTML = "";
+  const monthValue = monthPickerEl.value || getCurrentMonthValue();
+  const monthDates = buildMonthDates(monthValue);
 
-function renderCart() {
-  cartItemsEl.innerHTML = "";
+  const relevantDates = monthDates
+    .map((date) => ({ date, serviceType: getServiceTypeByDay(date) }))
+    .filter((entry) => entry.serviceType);
 
-  if (!cart.length) {
-    const emptyState = document.createElement("li");
-    emptyState.textContent = "Seu carrinho está vazio.";
-    cartItemsEl.appendChild(emptyState);
-    cartTotalEl.textContent = currency(0);
+  if (!relevantDates.length) {
+    availabilityCalendarEl.innerHTML = "<p>Não há cultos neste mês.</p>";
     return;
   }
 
-  let total = 0;
+  relevantDates.forEach(({ date, serviceType }) => {
+    const dateKey = toDateKey(date);
+    const card = document.createElement("article");
+    card.className = "date-card";
 
-  cart.forEach((entry) => {
-    const product = getProductById(entry.productId);
-    if (!product) return;
+    const title = document.createElement("h4");
+    title.textContent = formatDate(date);
 
-    const subtotal = product.price * entry.quantity;
-    total += subtotal;
+    const serviceInfo = document.createElement("small");
+    serviceInfo.textContent = Array.isArray(serviceType) ? serviceType.join(" e ") : serviceType;
 
-    const itemEl = document.createElement("li");
-    itemEl.className = "cart-item";
+    card.append(title, serviceInfo);
 
-    const detailsEl = document.createElement("div");
-    detailsEl.innerHTML = `<span>${entry.quantity}x ${product.name}</span><small>${currency(subtotal)}</small>`;
-
-    const removeButton = document.createElement("button");
-    removeButton.className = "remove-item-button";
-    removeButton.type = "button";
-    removeButton.textContent = "Remover";
-    removeButton.addEventListener("click", () => removeItemFromCart(entry.productId));
-
-    itemEl.append(detailsEl, removeButton);
-    cartItemsEl.appendChild(itemEl);
-  });
-
-  cartTotalEl.textContent = currency(total);
-}
-
-function formatCepInput() {
-  const digits = cepEl.value.replace(/\D/g, "").slice(0, 8);
-  cepEl.value = digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
-}
-
-async function fetchAddressByCep() {
-  const cep = cepEl.value.replace(/\D/g, "");
-  if (cep.length !== 8) return;
-
-  try {
-    const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-    if (!response.ok) throw new Error("Falha ao consultar CEP.");
-
-    const data = await response.json();
-    if (data.erro) {
-      alert("CEP não encontrado.");
+    if (!state.volunteers.length) {
+      const empty = document.createElement("p");
+      empty.className = "muted";
+      empty.textContent = "Cadastre voluntários para preencher disponibilidade.";
+      card.appendChild(empty);
+      availabilityCalendarEl.appendChild(card);
       return;
     }
 
-    streetEl.value = data.logradouro || "";
-    neighborhoodEl.value = data.bairro || "";
-    cityEl.value = data.localidade || "";
-    stateEl.value = data.uf || "";
-    numberEl.focus();
-  } catch {
-    alert("Não foi possível buscar o endereço pelo CEP.");
-  }
+    state.volunteers.forEach((volunteer) => {
+      const label = document.createElement("label");
+      label.className = "checkbox-item";
+
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.checked = Boolean(state.availabilities[dateKey]?.[volunteer.id]);
+
+      input.addEventListener("change", () => {
+        if (!state.availabilities[dateKey]) state.availabilities[dateKey] = {};
+        state.availabilities[dateKey][volunteer.id] = input.checked;
+        saveState();
+      });
+
+      label.append(input, document.createTextNode(volunteer.name));
+      card.appendChild(label);
+    });
+
+    availabilityCalendarEl.appendChild(card);
+  });
 }
 
-function getAddressText() {
-  const cep = cepEl.value.trim();
-  const street = streetEl.value.trim();
-  const number = numberEl.value.trim();
-  const neighborhood = neighborhoodEl.value.trim();
-  const city = cityEl.value.trim();
-  const state = stateEl.value.trim();
+function updateRequestMessage() {
+  const monthValue = monthPickerEl.value || getCurrentMonthValue();
+  const [year, month] = monthValue.split("-");
 
-  if (!cep || !street || !number || !neighborhood || !city || !state) {
-    return null;
-  }
-
-  return { cep, street, number, neighborhood, city, state };
+  requestMessageEl.value = `Olá, equipe do ${state.ministryName}!\n\n` +
+    `Estamos abrindo a disponibilidade de ${month}/${year}.\n` +
+    `Por favor, responda quais datas de sábado (19h), domingo pela manhã (9h) e domingo à noite (19h) você consegue servir.\n\n` +
+    `Igreja: ${state.churchName} - ${state.campusName}`;
 }
 
-function sendOrderByWhatsApp() {
-  const customerName = document.getElementById("customer-name").value.trim();
-  const paymentMethod = paymentMethodEl.value;
-  const address = getAddressText();
+function copyRequestMessage() {
+  updateRequestMessage();
+  requestMessageEl.select();
+  document.execCommand("copy");
+  alert("Mensagem copiada! Agora você pode enviar para os voluntários.");
+}
 
-  if (!customerName || !address || !paymentMethod) {
-    alert("Preencha nome, forma de pagamento e endereço completo para finalizar o pedido.");
+function renderAutoSchedule() {
+  scheduleOutputEl.innerHTML = "";
+
+  if (!state.volunteers.length) {
+    scheduleOutputEl.innerHTML = '<p class="empty">Cadastre voluntários antes de gerar a escala.</p>';
     return;
   }
 
-  if (!cart.length) {
-    alert("Adicione pelo menos um produto ao pedido.");
-    return;
-  }
+  const monthValue = monthPickerEl.value || getCurrentMonthValue();
+  const monthDates = buildMonthDates(monthValue);
+  const fallbackName = fallbackNameEl.value.trim() || "Líder (autoescala)";
 
-  let message = "*Novo pedido - Cardápio Digital*%0A";
-  message += `Cliente: ${customerName}%0A`;
-  message += `Pagamento: ${paymentMethod}%0A`;
-  message += `Endereço: ${address.street}, ${address.number} - ${address.neighborhood}, ${address.city}/${address.state} - CEP ${address.cep}%0A%0A`;
-  message += "*Itens:*%0A";
+  const relevantDates = monthDates.filter((date) => getServiceTypeByDay(date));
 
-  let total = 0;
-  cart.forEach((entry) => {
-    const product = getProductById(entry.productId);
-    if (!product) return;
+  relevantDates.forEach((date) => {
+    const dateKey = toDateKey(date);
+    const dateAvailabilities = state.availabilities[dateKey] || {};
 
-    const subtotal = product.price * entry.quantity;
-    total += subtotal;
-    message += `- ${entry.quantity}x ${product.name} (${currency(subtotal)})%0A`;
+    const wrapper = document.createElement("article");
+    wrapper.className = "schedule-card";
+    wrapper.innerHTML = `<h4>${formatDate(date)}</h4>`;
+
+    state.roles.forEach((role) => {
+      const eligible = state.volunteers.filter((volunteer) =>
+        volunteer.roles.includes(role) && dateAvailabilities[volunteer.id]
+      );
+
+      const assignee = eligible.length ? pickByFairness(role, eligible) : fallbackName;
+
+      const row = document.createElement("p");
+      row.innerHTML = `<strong>${role}:</strong> ${typeof assignee === "string" ? assignee : assignee.name}`;
+      wrapper.appendChild(row);
+    });
+
+    scheduleOutputEl.appendChild(wrapper);
+  });
+}
+
+const roleCounter = {};
+
+function pickByFairness(role, eligibleVolunteers) {
+  if (!roleCounter[role]) roleCounter[role] = {};
+
+  eligibleVolunteers.forEach((volunteer) => {
+    if (roleCounter[role][volunteer.id] === undefined) {
+      roleCounter[role][volunteer.id] = 0;
+    }
   });
 
-  message += `%0A*Total:* ${currency(total)}`;
+  const selected = [...eligibleVolunteers].sort(
+    (a, b) => roleCounter[role][a.id] - roleCounter[role][b.id]
+  )[0];
 
-  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, "_blank");
+  roleCounter[role][selected.id] += 1;
+  return selected;
 }
 
-function renderAdminProducts() {
-  adminProductsListEl.innerHTML = "";
-
-  products
-    .slice()
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .forEach((product) => {
-      const itemEl = document.createElement("li");
-      itemEl.className = "admin-product-item";
-      itemEl.innerHTML = `
-        <div>
-          <strong>${product.name}</strong>
-          <small>${currency(product.price)} • ${product.active ? "Ativo" : "Inativo"}</small>
-        </div>
-      `;
-
-      const buttonsWrap = document.createElement("div");
-      buttonsWrap.className = "admin-item-actions";
-
-      const editButton = document.createElement("button");
-      editButton.type = "button";
-      editButton.className = "secondary-button";
-      editButton.textContent = "Editar";
-      editButton.addEventListener("click", () => fillAdminFormForEdit(product.id));
-
-      const toggleButton = document.createElement("button");
-      toggleButton.type = "button";
-      toggleButton.textContent = product.active ? "Inativar" : "Ativar";
-      toggleButton.addEventListener("click", () => toggleProductActive(product.id));
-
-      buttonsWrap.append(editButton, toggleButton);
-      itemEl.appendChild(buttonsWrap);
-      adminProductsListEl.appendChild(itemEl);
-    });
+function toDateKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
-function clearAdminForm() {
-  adminForm.reset();
-  adminProductIdEl.value = "";
-  adminProductActiveEl.checked = true;
+function formatDate(date) {
+  return date.toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 }
-
-function fillAdminFormForEdit(productId) {
-  const product = getProductById(productId);
-  if (!product) return;
-
-  adminProductIdEl.value = String(product.id);
-  adminProductNameEl.value = product.name;
-  adminProductPriceEl.value = String(product.price);
-  adminProductImageEl.value = product.image;
-  adminProductActiveEl.checked = product.active;
-}
-
-function saveProduct(event) {
-  event.preventDefault();
-
-  const id = adminProductIdEl.value ? Number(adminProductIdEl.value) : null;
-  const name = adminProductNameEl.value.trim();
-  const price = Number(adminProductPriceEl.value);
-  const image = adminProductImageEl.value.trim();
-  const active = adminProductActiveEl.checked;
-
-  if (!name || Number.isNaN(price) || price <= 0) {
-    alert("Preencha nome e preço válido.");
-    return;
-  }
-
-  if (id) {
-    const product = getProductById(id);
-    if (!product) return;
-
-    product.name = name;
-    product.price = price;
-    product.image = image;
-    product.active = active;
-  } else {
-    const newId = products.length ? Math.max(...products.map((product) => product.id)) + 1 : 1;
-    products.push({ id: newId, name, price, image, active });
-  }
-
-  saveProducts();
-  clearAdminForm();
-  renderProducts();
-  renderCart();
-  renderAdminProducts();
-}
-
-function toggleProductActive(productId) {
-  const product = getProductById(productId);
-  if (!product) return;
-
-  product.active = !product.active;
-  saveProducts();
-
-  for (let i = cart.length - 1; i >= 0; i -= 1) {
-    if (cart[i].productId === productId && !product.active) {
-      cart.splice(i, 1);
-    }
-  }
-
-  renderProducts();
-  renderCart();
-  renderAdminProducts();
-}
-
-checkoutButton.addEventListener("click", sendOrderByWhatsApp);
-clearCartButton.addEventListener("click", clearCart);
-
-cepEl.addEventListener("input", formatCepInput);
-cepEl.addEventListener("blur", fetchAddressByCep);
-
-adminForm.addEventListener("submit", saveProduct);
-adminCancelEditButton.addEventListener("click", clearAdminForm);
-
-renderProducts();
-renderCart();
-renderAdminProducts();
