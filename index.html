@@ -3,104 +3,109 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cardápio Digital</title>
+    <title>Escala de Voluntários | PIB Curitiba - Campos Piraquara</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <header class="hero">
-      <h1>Cardápio Digital</h1>
-      <p>Peça sem sair de casa: escolha seus produtos e envie no WhatsApp.</p>
+      <div class="hero-brand">
+        <div class="logo-placeholder" aria-label="Espaço para logo da igreja">LOGO</div>
+        <div>
+          <p class="eyebrow">Primeira Igreja Batista de Curitiba</p>
+          <h1>PIB Curitiba - Campos Piraquara</h1>
+          <p class="subtitle">Sistema de cadastro e escala de voluntários</p>
+        </div>
+      </div>
+
+      <div class="hero-meta">
+        <p><strong>Ministério ativo:</strong> <span id="active-ministry-name">Ministério de Produção de Culto</span></p>
+      </div>
     </header>
 
-    <main class="container">
-      <section>
-        <h2>Produtos</h2>
-        <div id="product-list" class="product-grid"></div>
+    <main class="layout">
+      <section class="card">
+        <h2>1) Configuração do ministério</h2>
+        <p class="muted">Você pode reutilizar este sistema para qualquer ministério.</p>
+
+        <form id="ministry-form" class="form-grid">
+          <div>
+            <label for="church-name">Nome da igreja</label>
+            <input id="church-name" type="text" required />
+          </div>
+          <div>
+            <label for="campus-name">Campus / congregação</label>
+            <input id="campus-name" type="text" required />
+          </div>
+          <div>
+            <label for="ministry-name">Nome do ministério</label>
+            <input id="ministry-name" type="text" required />
+          </div>
+          <div>
+            <label for="roles-input">Funções disponíveis (separadas por vírgula)</label>
+            <input id="roles-input" type="text" placeholder="Ex.: Manager, Apoio de palco" required />
+          </div>
+          <button type="submit">Salvar configuração</button>
+        </form>
       </section>
 
-      <aside class="cart">
-        <h2>Seu pedido</h2>
-        <ul id="cart-items"></ul>
-        <p class="cart-total">Total: <strong id="cart-total">R$ 0,00</strong></p>
+      <section class="card">
+        <h2>2) Cadastro de voluntários</h2>
+        <form id="volunteer-form" class="form-grid">
+          <div>
+            <label for="volunteer-name">Nome completo</label>
+            <input id="volunteer-name" type="text" required />
+          </div>
+          <div>
+            <label for="volunteer-phone">Telefone</label>
+            <input id="volunteer-phone" type="tel" required />
+          </div>
+          <div>
+            <label for="volunteer-email">E-mail</label>
+            <input id="volunteer-email" type="email" required />
+          </div>
 
-        <div class="cart-actions">
-          <button id="clear-cart-button" class="secondary-button" type="button">Limpar pedido</button>
+          <fieldset class="roles-fieldset">
+            <legend>Funções em que deseja servir</legend>
+            <div id="roles-checkboxes" class="checkbox-grid"></div>
+          </fieldset>
+
+          <button type="submit">Cadastrar voluntário</button>
+        </form>
+
+        <h3>Voluntários cadastrados</h3>
+        <ul id="volunteers-list" class="list"></ul>
+      </section>
+
+      <section class="card">
+        <h2>3) Disponibilidade mensal</h2>
+
+        <div class="inline-row">
+          <label for="month-picker">Mês da escala</label>
+          <input id="month-picker" type="month" />
+          <button id="send-request-button" type="button">Gerar mensagem de disponibilidade</button>
         </div>
 
-        <label for="customer-name">Seu nome</label>
-        <input id="customer-name" type="text" placeholder="Ex.: Maria" />
+        <p class="muted">Mensagem padrão para você disparar no WhatsApp, e-mail ou outro canal:</p>
+        <textarea id="request-message" rows="4" readonly></textarea>
 
-        <label for="payment-method">Forma de pagamento</label>
-        <select id="payment-method">
-          <option value="">Selecione</option>
-          <option value="Pix">Pix</option>
-          <option value="Dinheiro">Dinheiro</option>
-          <option value="Cartão de Débito">Cartão de Débito</option>
-          <option value="Cartão de Crédito">Cartão de Crédito</option>
-        </select>
+        <div id="availability-calendar" class="calendar"></div>
+      </section>
 
-        <h3>Endereço de entrega</h3>
-        <label for="customer-cep">CEP</label>
-        <input id="customer-cep" type="text" placeholder="00000-000" maxlength="9" />
-
-        <div class="address-grid">
-          <div>
-            <label for="customer-street">Rua</label>
-            <input id="customer-street" type="text" />
-          </div>
-          <div>
-            <label for="customer-number">Número</label>
-            <input id="customer-number" type="text" />
-          </div>
-          <div>
-            <label for="customer-neighborhood">Bairro</label>
-            <input id="customer-neighborhood" type="text" />
-          </div>
-          <div>
-            <label for="customer-city">Cidade</label>
-            <input id="customer-city" type="text" />
-          </div>
-          <div>
-            <label for="customer-state">Estado</label>
-            <input id="customer-state" type="text" maxlength="2" />
-          </div>
+      <section class="card">
+        <h2>4) Escala automática + preenchimento manual</h2>
+        <div class="inline-row">
+          <button id="generate-schedule-button" type="button">Gerar escala do mês automaticamente</button>
+          <input id="fallback-name" type="text" placeholder="Seu nome para autoescala (fallback)" />
         </div>
 
-        <button id="checkout-button" type="button">Enviar pedido por WhatsApp</button>
-      </aside>
+        <div id="schedule-output" class="schedule-output"></div>
+      </section>
     </main>
 
-    <section class="admin-section">
-      <h2>Área do administrador</h2>
-      <p>Cadastre produtos, preço, imagem e controle se estão ativos no cardápio.</p>
-
-      <form id="admin-product-form" class="admin-form">
-        <input id="admin-product-id" type="hidden" />
-
-        <label for="admin-product-name">Nome do produto</label>
-        <input id="admin-product-name" type="text" placeholder="Ex.: X-Salada" required />
-
-        <label for="admin-product-price">Preço</label>
-        <input id="admin-product-price" type="number" min="0" step="0.01" placeholder="0,00" required />
-
-        <label for="admin-product-image">URL da imagem</label>
-        <input id="admin-product-image" type="url" placeholder="https://..." />
-
-        <label class="inline-checkbox" for="admin-product-active">
-          <input id="admin-product-active" type="checkbox" checked /> Produto ativo
-        </label>
-
-        <div class="admin-actions">
-          <button type="submit">Salvar produto</button>
-          <button id="admin-cancel-edit" class="secondary-button" type="button">Cancelar edição</button>
-        </div>
-      </form>
-
-      <ul id="admin-products-list" class="admin-products-list"></ul>
-    </section>
-
     <footer>
-      <small>Configure seus produtos e compartilhe o link desta página com seus clientes.</small>
+      <small>
+        Feito para o Ministério de Produção de Culto (Manager e Apoio de palco), com suporte para outros ministérios.
+      </small>
     </footer>
 
     <script src="app.js"></script>

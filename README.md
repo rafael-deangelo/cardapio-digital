@@ -1,23 +1,36 @@
-# Cardápio Digital
+# Sistema de Cadastro e Escala de Voluntários
 
-MVP de um sistema de cardápio digital onde o cliente final pode montar um pedido em casa e enviar para o WhatsApp da loja por meio de um link.
+Aplicação web estática para cadastro de voluntários e geração de escala mensal para igrejas e ministérios.
+
+## Cenário inicial já configurado
+
+- Igreja: **Primeira Igreja Batista de Curitiba**
+- Campus: **PIB Curitiba - Campos Piraquara**
+- Ministério: **Ministério de Produção de Culto**
+- Funções padrão: **Manager** e **Apoio de palco**
+
+> A configuração é editável para qualquer outro ministério.
 
 ## Funcionalidades
 
-- Lista de produtos com preços.
-- Carrinho com cálculo automático de total.
-- Formulário de nome e endereço de entrega.
-- Botão para enviar o pedido pronto para o WhatsApp.
+- Cadastro de ministério com funções customizáveis.
+- Cadastro de voluntários com nome, telefone, e-mail e múltiplas funções.
+- Tela mensal de disponibilidade para sábados (19h), domingos (9h e 19h).
+- Geração de mensagem padrão para disparo aos voluntários.
+- Geração automática de escala mensal por função.
+- Campo de fallback para autoescala (quando faltar voluntário disponível).
+- Persistência local via `localStorage`.
 
 ## Como usar
 
-1. Altere o número da loja em `app.js` na constante `WHATSAPP_NUMBER`.
-2. Abra `index.html` no navegador (ou sirva com um servidor local).
-3. Compartilhe o link/página com os clientes.
+1. Abra `index.html` em um navegador.
+2. Ajuste os dados do ministério na seção **Configuração do ministério**.
+3. Cadastre os voluntários.
+4. Escolha o mês e marque a disponibilidade.
+5. Clique em **Gerar escala do mês automaticamente**.
+6. Se faltar alguém em alguma data/função, informe seu nome no campo de fallback para autoescala.
 
 ## Servidor local (opcional)
-
-Se quiser rodar localmente com Python:
 
 ```bash
 python3 -m http.server 8000
